@@ -1,0 +1,4 @@
+{
+  "port": 5000,
+  "mongoUri": "mongodb+srv://admin:root@cluster0.piex9.mongodb.net/payments?retryWrites=true&w=majority"
+}
