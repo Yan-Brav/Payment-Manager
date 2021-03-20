@@ -56,7 +56,7 @@ function MenuBar({menubarOpened, toggleMenubar}) {
             <Divider />
             <div>
                 <div>
-                    <NavLink to='/'>Create payment</NavLink>
+                    <NavLink exact to='/'>Create payment</NavLink>
                 </div>
                 <div>
                     <NavLink to='/payments'>Payments</NavLink>
