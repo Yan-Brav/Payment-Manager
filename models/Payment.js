@@ -10,7 +10,7 @@ const paymentSchema = new Schema({
         type: String,
         default: 'processing'
     },
-    lastFour: Number,
+    lastFour: String,
     amount: {
         type: Number,
         set: v => {

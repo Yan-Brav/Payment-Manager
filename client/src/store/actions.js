@@ -7,8 +7,8 @@ export const fetchPayments = () => (dispatch) => {
 };
 
 export const CREATE_PAYMENT = 'CREATE_PAYMENT';
-export const createPlayer = (player,dispatch) => {
-    api.post('/payment', player).then(({data}) => dispatch({
+export const createPayment = (payment) => (dispatch) => {
+    api.post('/payment', payment).then(({data}) => dispatch({
         type: CREATE_PAYMENT,
         payload: data
     }))

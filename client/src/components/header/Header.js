@@ -74,7 +74,7 @@ function Header({menubarOpened, toggleMenubar}) {
                 noWrap
                 className={classes.title}
             >
-                Payments manager
+                Payment Manager
             </Typography>
         </Toolbar>
         </AppBar>
