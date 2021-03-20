@@ -12,7 +12,7 @@ const drawerWidth = 240;
 
 const useStyles = makeStyles(() => ({
     toolbar: {
-        paddingRight: 24, // keep right padding when drawer closed
+        paddingRight: 24,
     },
     appBar: {
         zIndex: theme.zIndex.drawer + 1,
