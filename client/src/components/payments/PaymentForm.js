@@ -37,7 +37,16 @@ const useStyles = makeStyles((theme) => ({
     },
     gridItem: {
         margin: '10px'
-    }
+    }/*,
+    gridItemVisible: {
+        margin: '10px',
+        visibility: 'visible'
+    },
+    gridItemHidden: {
+        margin: '10px',
+        visibility: 'hidden'
+    },*/
+
 }));
 
 function PaymentForm({createPayment}) {
@@ -47,25 +56,125 @@ function PaymentForm({createPayment}) {
 
     const paymentTypeList = ['cc', 'ach', 'token'];
 
-    Yup.addMethod(Yup.number, 'length', function(length, msg) {
+    Yup.addMethod(Yup.mixed, 'length', function(length, msg) {
         return this.test({
             name: 'length',
             message: msg,
             test: value => value && value.toString().length === length
         });
     });
-
-    const validation = Yup.object({
-        cardNumber: Yup.number().length(16, 'Field length must equal 16 symbol')
+    Yup.addMethod(Yup.mixed, 'maximum', function(max, msg) {
+        return this.test({
+            name: 'maximum',
+            message: msg,
+            test: value => value && value.toString().length <= max
+        });
     });
 
-    const onFormSubmit = (values, submitProps) => {
-        createPayment(values);
-        submitProps.resetForm();
-        alert(values.paymentType)
+
+    const validation = Yup.object({
+        cardNumber: Yup.number().length(16, `Field length must equal 16 symbol`)/*,
+        routingNumber: Yup.number('Field must contain only digits').length(9, 'Field length must equal 9 symbol'),
+        accountNumber: Yup.number('Field must contain only digits').maximum(17, 'Field length must less or equal 17 symbol')*/
+    });
+
+    const validateCardNumber = (value) => {
+        let error;
+        /*if (typeof value !== "number") {
+            error = 'Field must contain only digits';
+
+        }*/
+        if(value.toString().length !== 16) {
+            error = 'Field length must equal 16 symbol'
+        }
+
+        return error;
     };
 
-    const renderForm = ({values, dirty, isValid }) => {
+    const last4Create = (credentialNumber) => {
+        return credentialNumber.toString().slice(-4);
+    };
+
+    const selectStatus = () => {
+        const statusList = ['approved', 'declined', 'error'];
+        return statusList[Math.floor(Math.random()*statusList.length)];
+    };
+
+    const onFormSubmit = (values, submitProps) => {
+        if (values.cardNumber) {
+            values = {...values, lastFour: last4Create(values.cardNumber)}
+        } else if (values.accountNumber) {
+            values = {...values, lastFour: last4Create(values.accountNumber)}
+        } else if (values.token) {
+            values = {...values, lastFour: last4Create(values.token)}
+        } else {
+            values = {...values, lastFour: ''}
+        }
+        values = {...values, paymentStatus: selectStatus()};
+        createPayment(values);
+        submitProps.resetForm();
+        // alert(values.paymentType)
+    };
+
+    /*const showCredentials = (values) => {
+        switch (values.paymentType) {
+            case 'cc': return (
+                <Grid item xs={2} className={classes.gridItem}>
+                    <Grid container direction='column' justify='flex-start' spacing={1}>
+                        <Paper className={classes.paper}>
+                            <Field name='cardNumber'>
+                                {AppTextField}
+                            </Field>
+                        </Paper>
+                    </Grid>
+                    <Grid container direction='column' justify='flex-start' spacing={1}>
+                        <Paper className={classes.paper}>
+                            <Field name='expDate'>
+                                {AppTextField}
+                            </Field>
+                        </Paper>
+                    </Grid>
+                    <Grid container direction='column' justify='flex-start' spacing={1}>
+                        <Paper className={classes.paper}>
+                            <Field name='cvv'>
+                                {AppTextField}
+                            </Field>
+                        </Paper>
+                    </Grid>
+                </Grid>
+            );
+            case 'ach': return (<Grid item xs={2} className={classes.gridItem}>
+                <Grid container direction='column' justify='flex-start' spacing={1}>
+                    <Paper className={classes.paper}>
+                        <Field name='accountNumber'>
+                            {AppTextField}
+                        </Field>
+                    </Paper>
+                </Grid>
+                <Grid container direction='column' justify='flex-start' spacing={1}>
+                    <Paper className={classes.paper}>
+                        <Field name='routingNumber'>
+                            {AppTextField}
+                        </Field>
+                    </Paper>
+                </Grid>
+            </Grid>);
+            case 'token': return (<Grid item xs={2} className={classes.gridItem}>
+                <Grid container direction='column' justify='flex-start' spacing={1}>
+                    <Paper className={classes.paper}>
+                        <Field name='token'>
+                            {AppTextField}
+                        </Field>
+                    </Paper>
+                </Grid>
+            </Grid>);
+            default: return '';
+        }
+    };*/
+
+
+
+    const renderForm = ({values, dirty, isValid, errors, touched }) => {
         return (
             <Form id='payments-form' className={classes.root}>
                 <Grid container direction='row' spacing={1} >
@@ -77,7 +186,8 @@ function PaymentForm({createPayment}) {
                                         (props) => {
                                             return <AppSelectElement field={props.field}
                                                                      meta={props.meta}
-                                                                     types={paymentTypeList}/>
+                                                                     types={paymentTypeList}
+                                                                     />
                                         }
                                     }
                                 </Field>
@@ -94,9 +204,10 @@ function PaymentForm({createPayment}) {
                     {values.paymentType === 'cc' ? (<Grid item xs={2} className={classes.gridItem}>
                         <Grid container direction='column' justify='flex-start' spacing={1}>
                             <Paper className={classes.paper}>
-                                <Field name='cardNumber'>
+                                <Field name='cardNumber' validate={validateCardNumber}>
                                     {AppTextField}
                                 </Field>
+                                {errors.cardNumber && touched.cardNumber && <div>{errors.cardNumber}</div>}
                             </Paper>
                         </Grid>
                         <Grid container direction='column' justify='flex-start' spacing={1}>
@@ -137,6 +248,7 @@ function PaymentForm({createPayment}) {
                             </Paper>
                         </Grid>
                     </Grid>)}
+                    {/*{showCredentials(values)}*/}
                 </Grid>
                 <div >
                     <Button type='submit'
@@ -144,7 +256,10 @@ function PaymentForm({createPayment}) {
                             color='primary'
                             size='small'
                             startIcon={<SaveIcon />}
-                            disabled={!dirty || !isValid}
+                            disabled={!dirty || (values.paymentType === 'cc' && !isValid)}
+                            /*disabled={!dirty || (values.paymentType === 'cc' && !isValid)
+                                        || (values.paymentType === 'ach' && !isValid)
+                                        || (values.paymentType === 'token' && !isValid)}*/
                             className={classes.root}>Pay</Button>
                 </div>
             </Form>
@@ -156,7 +271,7 @@ function PaymentForm({createPayment}) {
             initialValues={EMPTY_PAYMENT}
             onSubmit={onFormSubmit}
             enableReinitialize={true}
-            validationSchema={validation}>
+            /*validationSchema={validation}*/>
             {renderForm}
         </Formik>
     );

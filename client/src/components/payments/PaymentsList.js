@@ -53,7 +53,6 @@ function PaymentsList({payments, fetchPayments}) {
             <Table className={classes.table} aria-label="customized table">
                 <TableHead>
                     <TableRow>
-                        <StyledTableCell>#</StyledTableCell>
                         <StyledTableCell align="left">uuid</StyledTableCell>
                         <StyledTableCell align="left">Payment Type</StyledTableCell>
                         <StyledTableCell align="left">Payment Status</StyledTableCell>
@@ -64,7 +63,6 @@ function PaymentsList({payments, fetchPayments}) {
                 <TableBody>
                     {payments.map((item, index) => (
                         <StyledTableRow key={item._id}>
-                            <StyledTableCell >{index + 1}</StyledTableCell>
                             <StyledTableCell align="left">{item._id}</StyledTableCell>
                             <StyledTableCell align="left">{item.paymentType}</StyledTableCell>
                             <StyledTableCell align="left">{item.paymentStatus}</StyledTableCell>

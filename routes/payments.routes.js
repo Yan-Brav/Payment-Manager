@@ -5,7 +5,7 @@ const router = Router();
 
 router.get('/', async (req, res) => {
     try {
-        await Payment.find({}, {...req.body}, {sort: {'paymentType': 1}}, (err, payments) => {
+        await Payment.find({}, {...req.body}, {sort: {'_id': -1}}, (err, payments) => {
             if(err) {
                 res.status(500).send('Something wrong, try again')
             } else {

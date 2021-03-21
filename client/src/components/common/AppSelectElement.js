@@ -22,21 +22,6 @@ function AppSelectElement({field, meta, types}) {
     const classes = useStyles();
 
 
-
-    /*const chooseArray = () => {
-        switch (field.name) {
-            case 'gender': return genderList.map((item) => (
-                <MenuItem key={item} value={item}>{item}</MenuItem>));
-            case 'year': return yearList.map((item) => (
-                <MenuItem key={item} value={item}>{item}</MenuItem>
-            ));
-            case 'address.city': return cities.map((item) => (
-                <MenuItem key={item._id} value={item.title}>{item.title}</MenuItem>
-            ));
-            default: break
-        }
-    };*/
-
     return (
         <FormControl {...field}
             variant='outlined'
