@@ -1,9 +1,12 @@
-import React from "react";
-// import {useHistory} from "react-router-dom";
-import * as Yup from "yup";
+import React, {useEffect} from "react";
+import {useHistory} from "react-router-dom";
+// import * as Yup from "yup";
 import {connect} from "react-redux";
 import {makeStyles} from "@material-ui/core";
-import {createPayment} from "../../store/actions";
+import {
+    createPayment,
+    deleteTempPayment,
+    fetchPayments} from "../../store/actions";
 import {Field, Form, Formik} from "formik";
 import Grid from "@material-ui/core/Grid";
 import Paper from "@material-ui/core/Paper";
@@ -20,7 +23,7 @@ const EMPTY_PAYMENT = {
     cvv: '',
     token: '',
     paymentType: 'cc',
-    paymentStatus: '',
+    paymentStatus: 'processing',
     lastFour: '',
     amount: ''
 };
@@ -40,45 +43,24 @@ const useStyles = makeStyles((theme) => ({
     }
 }));
 
-function PaymentForm({createPayment}) {
+function PaymentForm({createPayment,deleteTempPayment, fetchPayments}) {
 
     const classes = useStyles();
-    // const history = useHistory();
+    const history = useHistory();
+
+    useEffect(() => {
+        fetchPayments();
+    }, [fetchPayments]);
 
     const paymentTypeList = ['cc', 'ach', 'token'];
 
-    Yup.addMethod(Yup.mixed, 'length', function(length, msg) {
-        return this.test({
-            name: 'length',
-            message: msg,
-            test: value => value && value.toString().length === length
-        });
-    });
-    Yup.addMethod(Yup.mixed, 'maximum', function(max, msg) {
-        return this.test({
-            name: 'maximum',
-            message: msg,
-            test: value => value && value.toString().length <= max
-        });
-    });
-
-
-    /*const validation = Yup.object({
-        cardNumber: Yup.number().length(16, `Field length must equal 16 symbol`)/!*,
-        routingNumber: Yup.number('Field must contain only digits').length(9, 'Field length must equal 9 symbol'),
-        accountNumber: Yup.number('Field must contain only digits').maximum(17, 'Field length must less or equal 17 symbol')*!/
-    });*/
-
     const validateCardNumber = (value) => {
         let error;
-        /*if (typeof value !== "number") {
-            error = 'Field must contain only digits';
-
-        }*/
-        if(value.toString().length !== 16) {
-            error = 'Field length must equal 16 symbol'
+        if(value) {
+            if(value.toString().length !== 16) {
+                error = 'Field length must equal 16 symbol'
+            }
         }
-
         return error;
     };
 
@@ -91,7 +73,7 @@ function PaymentForm({createPayment}) {
         return statusList[Math.floor(Math.random()*statusList.length)];
     };
 
-    const onFormSubmit = (values, submitProps) => {
+    const onFormSubmit = async (values, submitProps) => {
         if (values.cardNumber) {
             values = {...values, lastFour: last4Create(values.cardNumber)}
         } else if (values.accountNumber) {
@@ -101,10 +83,15 @@ function PaymentForm({createPayment}) {
         } else {
             values = {...values, lastFour: ''}
         }
-        values = {...values, paymentStatus: selectStatus()};
-        createPayment(values);
+        history.push('/payments');
+        alert('Payment is being processed');
+        await setTimeout(() => {
+            values = {...values, paymentStatus: selectStatus()};
+            deleteTempPayment(values);
+            createPayment(values);
+            alert(`Payment is ${values.paymentStatus}`);
+        }, 40000 );
         submitProps.resetForm();
-        // alert(values.paymentType)
     };
 
     const renderForm = ({values, dirty, isValid}) => {
@@ -156,7 +143,8 @@ function PaymentForm({createPayment}) {
                                 </Field>
                             </Paper>
                         </Grid>
-                    </Grid>) : values.paymentType === 'ach' ? (<Grid item xs={2} className={classes.gridItem}>
+                    </Grid>) : ''}
+                    {values.paymentType === 'ach' ? (<Grid item xs={2} className={classes.gridItem}>
                         <Grid container direction='column' justify='flex-start' spacing={1}>
                             <Paper className={classes.paper}>
                                 <Field name='accountNumber'>
@@ -171,7 +159,8 @@ function PaymentForm({createPayment}) {
                                 </Field>
                             </Paper>
                         </Grid>
-                    </Grid>) : (<Grid item xs={2} className={classes.gridItem}>
+                    </Grid>) : ''}
+                    {values.paymentType === 'token' ?(<Grid item xs={2} className={classes.gridItem}>
                         <Grid container direction='column' justify='flex-start' spacing={1}>
                             <Paper className={classes.paper}>
                                 <Field name='token'>
@@ -179,7 +168,7 @@ function PaymentForm({createPayment}) {
                                 </Field>
                             </Paper>
                         </Grid>
-                    </Grid>)}
+                    </Grid>): ''}
                 </Grid>
                 <div >
                     <Button type='submit'
@@ -205,8 +194,12 @@ function PaymentForm({createPayment}) {
     );
 }
 
+const mapStateToProps = ({payments}) => ({payments});
+
 const mapDispatchToProps = {
-    createPayment
+    createPayment,
+    fetchPayments,
+    deleteTempPayment
 };
 
-export default connect(null, mapDispatchToProps)(PaymentForm);
+export default connect(mapStateToProps, mapDispatchToProps)(PaymentForm);
